@@ -8,9 +8,11 @@
  */
 class Resque
 {
-	const VERSION = '1.2';
+	const VERSION = '1.3';
 
     const DEFAULT_INTERVAL = 5;
+
+    public static $runInBackground = true;
 
 	/**
 	 * @var Resque_Redis Instance of Resque_Redis that talks to redis.
@@ -214,24 +216,46 @@ class Resque
 	 */
 	public static function enqueue($queue, $class, $args = null, $trackStatus = false)
 	{
-		$id         = Resque::generateJobId();
-		$hookParams = array(
-			'class' => $class,
-			'args'  => $args,
-			'queue' => $queue,
-			'id'    => $id,
-		);
-		try {
-			Resque_Event::trigger('beforeEnqueue', $hookParams);
-		}
-		catch(Resque_Job_DontCreate $e) {
-			return false;
-		}
+        if (self::$runInBackground)
+        {
+            $id         = Resque::generateJobId();
+            $hookParams = array(
+                'class' => $class,
+                'args'  => $args,
+                'queue' => $queue,
+                'id'    => $id,
+            );
+            try {
+                Resque_Event::trigger('beforeEnqueue', $hookParams);
+            }
+            catch(Resque_Job_DontCreate $e) {
+                return false;
+            }
 
-		Resque_Job::create($queue, $class, $args, $trackStatus, $id);
-		Resque_Event::trigger('afterEnqueue', $hookParams);
+            Resque_Job::create($queue, $class, $args, $trackStatus, $id);
+            Resque_Event::trigger('afterEnqueue', $hookParams);
 
-		return $id;
+            return $id;
+        }
+        else
+        {
+            $obj = new $class();
+            $obj->args = $args;
+
+            if(method_exists($obj, 'setUp')) {
+                $obj->setUp();
+            }
+
+            if(method_exists($obj, 'perform')) {
+                $obj->perform();
+            }
+
+            if(method_exists($obj, 'tearDown')) {
+                $obj->tearDown();
+            }
+
+            return true;
+        }
 	}
 
 	/**

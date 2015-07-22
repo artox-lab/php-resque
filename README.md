@@ -49,15 +49,13 @@ required, but makes life a lot easier.
 
 If you're not familiar with Composer, please see <http://getcomposer.org/>.
 
-1. Add php-resque to your application's composer.json.
+1. Add php-resque to your application's `composer.json`.
 
 ```json
 {
-    // ...
     "require": {
-        "chrisboulton/php-resque": "1.2.x"	// Most recent tagged version
+        "artox-lab/php-resque": "1.3.x"
     },
-    // ...
 }
 ```
 
@@ -490,3 +488,4 @@ needing to directly examine the code), have a look at `HOWITWORKS.md`.
 * @tonypiper
 * @trimbletodd
 * @warezthebeef
+* @noxt
